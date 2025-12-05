@@ -1,9 +1,13 @@
-# CUDA-bites
-I created CUDA-bites because I couldn’t find concise, practical resources that teach CUDA the way I learn. It’s a compact, hands-on collection of bite-sized lessons and runnable examples that will take you from zero to a productive GPU developer in one week. Each unit focuses on a single practical concept (kernels, memory, concurrency, profiling, libraries) and includes clear explanations, short exercises, and a small capstone task so you can put the ideas into practice immediately.
+# CUDA Optimization & Parallel Algorithms 
+
+## 📖 Introduction
+This repository documents my journey in learning CUDA programming and parallel computing architecture. It contains implementations of fundamental and advanced algorithms, optimized from naive CPU implementations to highly tuned GPU kernels.
+
+The goal of this project is not just to write code that runs on a GPU, but to have a deep practical understanding of the GPU memory hierarchy, warp divergence, occupancy, and instruction-level parallelism.
 
 ## Minimal prerequisites
 - Basic familiarity with C/C++ or Python.
 - A system with an NVIDIA GPU and CUDA toolkit installed (links and quick setup provided in the repo).
 
-## 7-Day roadmap
+
 
