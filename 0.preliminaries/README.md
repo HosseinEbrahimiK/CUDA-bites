@@ -35,10 +35,12 @@ When you launch a kernel, you aren't running it once. You are telling the GPU: "
 3. Parallel Execution: The GPU spins up 1 million threads. Every single thread runs the exact same Kernel code, but Thread #1 works on data point #1, and Thread #99 works on data point #99.
 
 ## Host (CPU) vs Device (GPU)
-In CUDA terminology, we came across two terms a lot:
+In CUDA terminology, we come across these terms a lot:
 
 - **Host**: The CPU and its system memory. Controls the execution flow of the application.
 - **Device**: The GPU and its on-board memory. Executes the parallel compute intensive tasks (kernels).
+- **on-chip**: The GPU's on-board memory.
+- **off-chip**: The CPU's system memory.
 
 Data must be moved from Host to Device for processing, and results moved back from Device to Host.
 
