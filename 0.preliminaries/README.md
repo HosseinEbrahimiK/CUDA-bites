@@ -8,18 +8,18 @@ To understand CUDA, we first need to understand the problem. An Large Language M
 
 - **GPU (Graphics Processing Unit)**: A GPU is like an army of thousands of elementary school students. Individually, they aren't as "smart" as the PhD, but they can solve 10,000 simple multiplication problems simultaneously.
 
+![cpu_gpu](https://docs.nvidia.com/cuda/cuda-programming-guide/_images/gpu-devotes-more-transistors-to-data-processing.png)
+
 LLMs don't need complex logic for every calculation; they need sheer volume. This is where CUDA comes in.
 
 ### What is CUDA? (The "Language")
 CUDA (Compute Unified Device Architecture) is a software layer and programming model created by NVIDIA. It allows developers to "talk" to the GPU.
 
-Without CUDA, GPUs are just graphics cards designed to render video game pixels independently in parallel. CUDA unlocks the GPU's ability to do General Purpose computing.
+Without CUDA, GPUs are just graphics cards designed to render video game pixels independently in parallel. CUDA unlocks the GPU's ability to do general purpose computing.
 
-It acts as a bridge. It lets you write code in languages like C++ or Python (via libraries like PyTorch) that sends instructions specifically to the GPU's "army" of cores.
+It acts as a bridge. It lets you write code in languages like C++ or Python (via libraries like PyTorch) that sends instructions specifically to the GPU's "army" of cores (elementary school students).
 
-CUDA organizes the thousands of GPU cores into a hierarchy (Grids, Blocks, and Threads) so they don't crash into each other while working.
-
-If the GPU is a massive factory full of workers, CUDA is the management system and the intercoms that allow the boss (the CPU) to give orders to the factory floor.
+CUDA organizes the thousands of GPU cores into a hierarchy (Grids, Blocks, and Threads) so they don't crash into each other while working. If the GPU is a massive factory full of workers, CUDA is the management system and the intercoms that allow the boss (the CPU) to give orders to the factory floor.
 
 ### What is a Kernel? (The "Task")
 In the world of CUDA, a Kernel is a small, specialized function that you send to the GPU to be executed.
@@ -43,7 +43,16 @@ In CUDA terminology, we came across two terms a lot:
 Data must be moved from Host to Device for processing, and results moved back from Device to Host.
 
 ## Memory Management
-Managing memory on the GPU is similar to C `malloc`/`free` but with CUDA-specific APIs.
+Managing memory on the GPU is similar to C `malloc`/`free` but with CUDA-specific APIs. Memorize the following functions:
+
+- `cudaMalloc`: Allocate memory on the device.
+- `cudaFree`: Free memory on the device.
+- `cudaMemcpy`: Copy memory between host and device.
+
+And following flags for `cudaMemcpy`:
+
+- `cudaMemcpyHostToDevice`: Copy from host to device.
+- `cudaMemcpyDeviceToHost`: Copy from device to host.
 
 ```cpp
 float *d_data;
