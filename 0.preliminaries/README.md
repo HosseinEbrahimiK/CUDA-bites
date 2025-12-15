@@ -19,7 +19,7 @@ Without CUDA, GPUs are just graphics cards designed to render video game pixels 
 
 It acts as a bridge. It lets you write code in languages like C++ or Python (via libraries like PyTorch) that sends instructions specifically to the GPU's "army" of cores (elementary school students).
 
-CUDA organizes the thousands of GPU cores into a hierarchy (Grids, Blocks, and Threads) so they don't crash into each other while working. If the GPU is a massive factory full of workers, CUDA is the management system and the intercoms that allow the boss (the CPU) to give orders to the factory floor.
+CUDA organizes the thousands of GPU cores into a hierarchy (Grids, Blocks, and Threads) so they don't crash into each other while working in parallel. If the GPU is a massive factory full of workers, CUDA is the management system and the intercoms that allow the boss (the CPU) to give orders to the factory floor.
 
 ### What is a Kernel? (The "Task")
 In the world of CUDA, a Kernel is a small, specialized function that you send to the GPU to be executed.
@@ -45,9 +45,9 @@ In CUDA terminology, we come across these terms a lot:
 Data must be moved from Host to Device for processing, and results moved back from Device to Host.
 
 ## Memory Management
-Managing memory on the GPU is similar to C `malloc`/`free` but with CUDA-specific APIs. Memorize the following functions:
+Managing memory on the GPU is similar to C `malloc`/`free` but with CUDA-specific APIs. It's useful to memorize the following functions:
 
-- `cudaMalloc`: Allocate memory on the device.
+- `cudaMalloc`: Allocates a single, physically contiguous block of memory on the device.
 - `cudaFree`: Free memory on the device.
 - `cudaMemcpy`: Copy memory between host and device.
 
@@ -75,17 +75,8 @@ cudaMemcpy(h_result, d_data, size, cudaMemcpyDeviceToHost);
 cudaFree(d_data);
 ```
 
-## Memory Hierarchy
-CUDA exposes several types of memory with different scopes and speeds:
-
-1.  **Registers**: Fastest memory. Private to each thread.
-2.  **Local Memory**: Slower, part of global memory but private to a thread (used for spills).
-3.  **Shared Memory**: Fast, on-chip memory. Shared by threads within the same **Block**. Used for efficient inter-thread communication.
-4.  **Global Memory**: Largest but slowest (off-chip). Accessible by all threads and the Host.
-5.  **Constant Memory**: Read-only cache, fast if all threads read the same address.
-
 ## Function Specifiers
-To distinguish where a function runs and is called from:
+To distinguish where a function runs and is called from in CUDA code:
 
 - `__global__`: Runs on Device (GPU), called from Host (CPU). This defines a **Kernel**.
 - `__device__`: Runs on Device, called from Device. Helper functions for kernels.
@@ -102,21 +93,19 @@ __device__ int deviceFunc() {
 }
 ```
 
-## Kernel Launch
-To launch a kernel (function with `__global__`), we use the triple angle bracket syntax: `<<< ... >>>`.
+## Kernel Launch (fun stuff!)
+To launch/run a kernel (function with `__global__`), we use the triple angle bracket syntax: `<<< ... >>>`.
 
 ```cpp
 // Kernel launch
 myKernel<<<gridDim, blockDim>>>(args...);
 ```
+With gridDim and blockDim, we define the number of threads to be executed and how they are structured in the grid. This is the most intersting part about parallel programming, in my opinion!
 
-- **gridDim** (or blocks): Number of thread blocks in the grid.
-- **blockDim** (or threads): Number of threads per block.
-
-Total threads = `gridDim * blockDim`.
+![thread_hierarchy](https://docs.nvidia.com/cuda/cuda-programming-guide/_images/grid-of-thread-blocks.png)
 
 ## Thread Hierarchy
-Threads are organized in a hierarchy to map to the hardware structure (SMs, SPs).
+Threads are formed in a hierarchy to map to the hardware structure.
 
 1.  **Grid**: Complete collection of threads executing a kernel. Made of Blocks.
 2.  **Block**: Group of threads that can share memory (Shared Memory) and synchronize.
@@ -131,6 +120,21 @@ Built-in variables to locate a thread:
 ```cpp
 int idx = blockIdx.x * blockDim.x + threadIdx.x;
 ```
+
+**Global Index Calculation (2D):**
+```cpp
+int idx = blockIdx.x * blockDim.x + threadIdx.x;
+int idy = blockIdx.y * blockDim.y + threadIdx.y;
+```
+
+## Memory Hierarchy
+CUDA exposes several types of memory with different scopes and speeds:
+
+1.  **Registers**: Fastest memory. Private to each thread.
+2.  **Local Memory**: Slower, part of global memory but private to a thread (used for spills).
+3.  **Shared Memory**: Fast, on-chip memory. Shared by threads within the same **Block**. Used for efficient inter-thread communication.
+4.  **Global Memory**: Largest but slowest (off-chip). Accessible by all threads and the Host.
+5.  **Constant Memory**: Read-only cache, fast if all threads read the same address.
 
 ## Synchronization
 Since threads run in parallel, we often need to coordinate them.
