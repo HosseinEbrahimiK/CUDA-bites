@@ -100,7 +100,7 @@ To launch/run a kernel (function with `__global__`), we use the triple angle bra
 // Kernel launch
 myKernel<<<gridDim, blockDim>>>(args...);
 ```
-With gridDim and blockDim, we define the number of threads to be executed and how they are structured in the grid. This is the most intersting part about parallel programming, in my opinion!
+With gridDim and blockDim, we define the number of threads to be executed and how they are structured in the grid. **This is the most intersting part about parallel programming, in my opinion!** Think about your data, your calculation, and how you can adapt it to the GPU's architecture of threads and blocks. Beautiful!
 
 ![thread_hierarchy](https://docs.nvidia.com/cuda/cuda-programming-guide/_images/grid-of-thread-blocks.png)
 
