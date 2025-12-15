@@ -107,14 +107,23 @@ With gridDim and blockDim, we define the number of threads to be executed and ho
 ## Thread Hierarchy
 Threads are formed in a hierarchy to map to the hardware structure.
 
-1.  **Grid**: Complete collection of threads executing a kernel. Made of Blocks.
-2.  **Block**: Group of threads that can share memory (Shared Memory) and synchronize.
+1. **Thread**: CUDA Core (Execution Unit). The smallest unit of execution. Each thread runs the same code but on different data.
+2. **Warp**: Warp Scheduler. A group of 32 threads that execute the same instruction in a Single-Instruction, Multiple-Thread fashion.
+3. **Block**: Streaming Multiprocessor (SM). A collection of warps (up to 1024 threads total) that can cooperate via shared memory and synchronize with barriers.
+4. **Grid**: GPU Device. A collection of independent thread blocks that execute concurrently across all available SMs.
 
-Built-in variables to locate a thread:
+Built-in variables to locate a thread within the grid and block. 
+
 - `gridDim`: Dimensions of the grid.
 - `blockDim`: Dimensions of the block.
 - `blockIdx`: Index of the current block within the grid.
 - `threadIdx`: Index of the current thread within the block.
+
+Each of these intrinsics is a 3-component vector with a `.x`, `.y`, and `.z` member. Dimensions not specified by a launch configuration will default to 1. `threadIdx` and `blockIdx` are zero indexed. That is, `threadIdx.x` will take on values from 0 up to and including `blockDim.x-1`. `.y` and `.z` operate the same in their respective dimensions.
+
+Similarly, `blockIdx.x` will take on values from 0 up to and including `gridDim.x-1`, and the same for `.y` and `.z` dimensions, respectively.
+
+These allow an individual thread to identify what work it should carry out.
 
 **Global Index Calculation (1D):**
 ```cpp
@@ -142,21 +151,47 @@ Since threads run in parallel, we often need to coordinate them.
 - **`__syncthreads()`**: Barrier synchronization for threads within the **same Block**. All threads in the block must reach this point before any can proceed.
 - **`cudaDeviceSynchronize()`**: Called from the Host. Blocks the CPU until all preceding GPU tasks (kernels, copies) are complete.
 
-## Error Handling
-CUDA calls return an error code (`cudaError_t`). Always check it!
+## Overall flow of a CUDA program
+
+1.  **Initialize data on Host**: Allocate memory on the CPU and fill it with input data.
+2.  **Allocate memory on Device**: Use `cudaMalloc` to reserve space on the GPU for inputs and outputs.
+3.  **Transfer data (Host $\to$ Device)**: Use `cudaMemcpy` to move input data from CPU memory to GPU memory.
+4.  **Launch Kernel**: Invoke the kernel function with specific grid and block dimensions to process data in parallel on the GPU.
+5.  **Transfer results (Device $\to$ Host)**: Use `cudaMemcpy` to move the calculated results from GPU memory back to CPU memory.
+6.  **Free memory**: Release the allocated memory on the GPU using `cudaFree`.
 
 ```cpp
-cudaError_t err = cudaMalloc(&ptr, size);
-if (err != cudaSuccess) {
-    printf("CUDA Error: %s\n", cudaGetErrorString(err));
+// Kernel: The function that runs on the GPU
+__global__ void myKernel(float* d_in, float* d_out) {
+    // Calculate global thread ID
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    // Perform work
+    d_out[idx] = d_in[idx] * 2.0f; 
 }
-```
 
-For kernels (which return void), check `cudaGetLastError()`:
-```cpp
-myKernel<<<...>>>();
-cudaError_t err = cudaGetLastError();
-if (err != cudaSuccess) {
-    printf("Kernel Error: %s\n", cudaGetErrorString(err));
+int main() {
+    // 1. Initialize data on Host (CPU)
+    float* h_in = ...; 
+    float* h_out = ...;
+
+    // 2. Allocate memory on Device (GPU)
+    float *d_in, *d_out;
+    cudaMalloc(&d_in, size);
+    cudaMalloc(&d_out, size);
+
+    // 3. Transfer data (Host -> Device)
+    cudaMemcpy(d_in, h_in, size, cudaMemcpyHostToDevice);
+
+    // 4. Launch Kernel
+    // <<<Grid Dimensions, Block Dimensions>>>
+    myKernel<<<blocks, threads>>>(d_in, d_out);
+
+    // 5. Transfer results (Device -> Host)
+    cudaMemcpy(h_out, d_out, size, cudaMemcpyDeviceToHost);
+
+    // 6. Free memory
+    cudaFree(d_in);
+    cudaFree(d_out);
 }
 ```
