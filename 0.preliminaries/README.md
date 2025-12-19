@@ -195,3 +195,4 @@ int main() {
     cudaFree(d_out);
 }
 ```
+Following this receipe, we will go through a series of examples to understand how to use CUDA to parallelize calculations and learn more stuff along the way.
