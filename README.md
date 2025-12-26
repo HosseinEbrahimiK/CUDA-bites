@@ -1,6 +1,6 @@
-# CUDA Bites 🥨
+# CUDA-Kar 🥨
 
-Welcome to **CUDA Bites**. This repository contains my personal journey digging into the LLM stack. In this repository we gonna takle simple to complex parallel programming concepts and break them down into small, digestible "bites" for myself and anyone else who wants to follow along.
+Welcome to **CUDA Kar** (means someone who knows CUDA! :D). This repository contains my personal journey digging into the LLM stack. In this repository we gonna takle simple to complex parallel programming concepts and break them down into small, digestible "bites" for myself and anyone else who wants to follow along.
 
 
 We start from the basics Hello World of CUDA (vector addition) and aim to perform highly optimized implementations of the building blocks of modern LLMs:
