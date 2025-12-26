@@ -136,21 +136,6 @@ int idx = blockIdx.x * blockDim.x + threadIdx.x;
 int idy = blockIdx.y * blockDim.y + threadIdx.y;
 ```
 
-## Memory Hierarchy
-CUDA exposes several types of memory with different scopes and speeds:
-
-1.  **Registers**: Fastest memory. Private to each thread.
-2.  **Local Memory**: Slower, part of global memory but private to a thread (used for spills).
-3.  **Shared Memory**: Fast, on-chip memory. Shared by threads within the same **Block**. Used for efficient inter-thread communication.
-4.  **Global Memory**: Largest but slowest (off-chip). Accessible by all threads and the Host.
-5.  **Constant Memory**: Read-only cache, fast if all threads read the same address.
-
-## Synchronization
-Since threads run in parallel, we often need to coordinate them.
-
-- **`__syncthreads()`**: Barrier synchronization for threads within the **same Block**. All threads in the block must reach this point before any can proceed.
-- **`cudaDeviceSynchronize()`**: Called from the Host. Blocks the CPU until all preceding GPU tasks (kernels, copies) are complete.
-
 ## Overall flow of a CUDA program
 
 1.  **Initialize data on Host**: Allocate memory on the CPU and fill it with input data.

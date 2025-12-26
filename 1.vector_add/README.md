@@ -31,11 +31,11 @@ This means we don't need to wait for one addition to finish before starting the 
 
 In CUDA, we can assign each iteration of the loop to a single **Thread**.
 
-## The Kernel
+### The Kernel
 
 We need to define a function (Kernel) that a single thread will execute. Instead of a loop over `i`, the kernel will compute the index `i` that belongs to *this specific thread* and then perform the work for that index.
 
-### 1. Calculate the Global Index
+#### 1. Calculate the Global Index
 As we learned in the preliminaries, we use the built-in variables to find where a thread lives in the grid.
 
 ```cpp
@@ -46,7 +46,7 @@ int i = blockIdx.x * blockDim.x + threadIdx.x;
 - `blockDim.x`: "How many threads are in a block?"
 - `threadIdx.x`: "Which thread am I within my block?"
 
-### 2. Guard Against Out-of-Bounds
+#### 2. Guard Against Out-of-Bounds
 If our total number of threads is slightly larger than `N` (because blocks are a fixed size, e.g., 256), we need to make sure we don't access invalid memory.
 
 ```cpp
@@ -55,7 +55,7 @@ if (i < N) {
 }
 ```
 
-### 3. The Full Kernel Code
+#### 3. The Full Kernel Code
 Putting it together with the `__global__` specifier:
 
 ```cpp
