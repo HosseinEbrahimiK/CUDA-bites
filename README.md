@@ -1,4 +1,4 @@
-# CUDA-Kar
+# CUDA Kar
 
 Welcome to **CUDA Kar** (means someone who knows CUDA! :D). This repository contains my personal journey digging into the LLM stack. In this repository we gonna takle simple to complex parallel programming concepts and break them down into small, digestible "bites" for myself and anyone else who wants to follow along.
 
