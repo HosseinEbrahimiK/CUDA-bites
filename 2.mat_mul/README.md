@@ -31,7 +31,7 @@ Here is the simple CPU code that calculates each element of matrix $C_{ij}$ by s
     }
 ```
 
-Notice instead of allocating a 2D array, we can allocate a 1D array and access it as a 2D array with smart indexing as formula $i \times N + j$.
+Notice instead of allocating a 2D array, we allocated a 1D array and access it as a 2D array with smart indexing as formula $i \times N + j$.
 
 ## Parallel Thinking
 
@@ -79,20 +79,30 @@ Amazing! We've just implemented a matrix multiplication kernel. Unfortunatelly, 
 
 **coalesced access**: Accessing consecutive memory locations in a single transaction.
 
-**strided access**: Accessing non-consecutive memory locations in multiple transactions.
+**strided access**: Accessing non-consecutive memory locations in multiple transactions with a fixed skip.
+
+**random access**: Accessing memory locations in an arbitrary order (e.g., linked list, hash tables).
+
+We prefer coalesced access as it enables the hardware to coalesce groups of reads or writes of multiple data items into one operation. Data that cannot be laid out so as to enable coalescing, or that doesn’t have enough locality to use the caches effectively, will tend to see lesser speedups when used in computations on GPUs.
+
+![Memory Access](../images/mem_access.png)
+
+As we can see, the way we read from $A$ is coalesced but for $B$ it's strided for each thread. This is not optimal as it slows down the memory access! We can improve it by using a special memory called **shared memory**. First, let's learn about the memory hierarchy on GPUs.
 
 ## Memory Hierarchy
 CUDA exposes several types of memory with different scopes and speeds:
 
-1.  **Registers**: Fastest memory. Private to each thread.
+1.  **Registers**: Fastest memory. Private to each thread. For example, the sum variable in the kernel is stored in a register.
 2.  **Local Memory**: Slower, part of global memory but private to a thread (used for spills).
 3.  **Shared Memory**: Fast, on-chip memory. Shared by threads within the same **Block**. Used for efficient inter-thread communication.
-4.  **Global Memory**: Largest but slowest (off-chip). Accessible by all threads and the Host.
-5.  **Constant Memory**: Read-only cache, fast if all threads read the same address.
+4.  **Constant Memory**: Read-only cache, fast if all threads read the same address.
+5.  **Global Memory**: Largest but slowest (off-chip). Global memory is the primary memory space for storing data that is accessible by all threads in a kernel. It is similar to RAM in a CPU system. Global memory is allocated with CUDA API calls such as `cudaMalloc`. Data can be copied into global memory from CPU memory using CUDA runtime API calls such as `cudaMemcpy` and freed with `cudaFree`.
 
-## Synchronization
+
+
+<!-- ## Synchronization
 Since threads run in parallel, we often need to coordinate them.
 
 - **`__syncthreads()`**: Barrier synchronization for threads within the **same Block**. All threads in the block must reach this point before any can proceed.
-- **`cudaDeviceSynchronize()`**: Called from the Host. Blocks the CPU until all preceding GPU tasks (kernels, copies) are complete.
+- **`cudaDeviceSynchronize()`**: Called from the Host. Blocks the CPU until all preceding GPU tasks (kernels, copies) are complete. -->
 
