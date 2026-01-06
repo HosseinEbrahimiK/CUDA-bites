@@ -18,7 +18,7 @@ We start from the basics Hello World of CUDA (vector addition) and aim to perfor
 
 - [x] **0. Preliminaries**: Understanding the CPU vs. GPU paradigm.
 - [x] **1. Vector Addition**: Hello World of CUDA.
-- [ ] **2. Matrix Multiplication**: Naive to Tiled implementation.
+- [x] **2. Matrix Multiplication**: Naive to Tiled implementation.
 - [ ] **3. Reduction**: Parallelizing sum/max operations.
 - [ ] **4. Softmax**: Numerical stability in parallel.
 
