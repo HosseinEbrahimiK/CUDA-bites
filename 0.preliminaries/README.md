@@ -10,12 +10,12 @@ To understand CUDA, we first need to understand the problem. An Large Language M
 
 ![cpu_gpu](https://docs.nvidia.com/cuda/cuda-programming-guide/_images/gpu-devotes-more-transistors-to-data-processing.png)
 
-LLMs don't need complex logic for every calculation; they need sheer volume. This is where CUDA comes in.
+LLMs, or Deep Learning Models in general, don't need complex logic for every calculation; they need massive volume. This is where CUDA comes in.
 
 ### What is CUDA? (The "Language")
 CUDA (Compute Unified Device Architecture) is a software layer and programming model created by NVIDIA. It allows developers to "talk" to the GPU.
 
-Without CUDA, GPUs are just graphics cards designed to render video game pixels independently in parallel. CUDA unlocks the GPU's ability to do general purpose computing.
+Without CUDA, GPUs are just graphics cards designed to render video game pixels independently in parallel. CUDA unlocks the GPU's ability to do General Purpose Computing (GPC).
 
 It acts as a bridge. It lets you write code in languages like C++ or Python (via libraries like PyTorch) that sends instructions specifically to the GPU's "army" of cores (elementary school students).
 
@@ -105,12 +105,12 @@ With gridDim and blockDim, we define the number of threads to be executed and ho
 ![thread_hierarchy](https://docs.nvidia.com/cuda/cuda-programming-guide/_images/grid-of-thread-blocks.png)
 
 ## Thread Hierarchy
-Threads are formed in a hierarchy to map to the hardware structure.
+Threads are formed in a hierarchy to map to the hardware structure the CUDA is built on. Dont't worry about the GPU hardware structure as we will come back to them in later sections.
 
-1. **Thread**: CUDA Core (Execution Unit). The smallest unit of execution. Each thread runs the same code but on different data.
-2. **Warp**: Warp Scheduler. A group of 32 threads that execute the same instruction in a Single-Instruction, Multiple-Thread fashion.
-3. **Block**: Streaming Multiprocessor (SM). A collection of warps (up to 1024 threads total) that can cooperate via shared memory and synchronize with barriers.
-4. **Grid**: GPU Device. A collection of independent thread blocks that execute concurrently across all available SMs.
+1. **Thread: CUDA Core (Execution Unit)**. The smallest unit of execution. Each thread runs the same code but on different data.
+2. **Warp: Warp Scheduler**. A group of 32 threads that execute the same instruction in a Single-Instruction, Multiple-Thread (SIMT) fashion.
+3. **Block: Streaming Multiprocessor (SM)**. A collection of warps (up to 1024 threads total) that can cooperate via shared memory and synchronize with each other.
+4. **Grid: GPU Device**. A collection of independent thread blocks that execute concurrently across all available SMs.
 
 Built-in variables to locate a thread within the grid and block. 
 

@@ -98,11 +98,78 @@ CUDA exposes several types of memory with different scopes and speeds:
 4.  **Constant Memory**: Read-only cache, fast if all threads read the same address.
 5.  **Global Memory**: Largest but slowest (off-chip). Global memory is the primary memory space for storing data that is accessible by all threads in a kernel. It is similar to RAM in a CPU system. Global memory is allocated with CUDA API calls such as `cudaMalloc`. Data can be copied into global memory from CPU memory using CUDA runtime API calls such as `cudaMemcpy` and freed with `cudaFree`.
 
+## Tiled Matrix Multiplication
 
+If we could access $B$ the same way as we access $A$ in coalesced way, the problem is solved. However, the nature of matrix multiplication requires us to traverse $B$ column-wise, which inherently leads to strided access patterns.
 
-<!-- ## Synchronization
-Since threads run in parallel, we often need to coordinate them.
+To solve this, we can take advantage of the fact that threads in the same block are interested in data that is located nearby in the matrix. Instead of each thread fetching its own data from the slow Global Memory independently, they can work together using **tiling**.
 
-- **`__syncthreads()`**: Barrier synchronization for threads within the **same Block**. All threads in the block must reach this point before any can proceed.
-- **`cudaDeviceSynchronize()`**: Called from the Host. Blocks the CPU until all preceding GPU tasks (kernels, copies) are complete. -->
+### The Core Idea: Tiling
 
+The idea is to partition the large matrices into smaller sub-matrices called **Tiles** that fit into the fast **Shared Memory**.
+
+We divide the output matrix $C$ into square tiles of size `TILE_SIZE` $\times$ `TILE_SIZE`. Each CUDA block is assigned to compute one such tile of $C$.
+
+![Tiled Matrix Multiplication](../images/tiled_matmul.png)
+
+To compute its tile of $C$, the block moves step-by-step across the matrices $A$ and $B$. In each step (or phase):
+1.  **Cooperative Loading**: All threads in the block work together to load a square tile from matrix $A$ and a square tile from matrix $B$ into Shared Memory. Each thread typically loads just one element for $A$ and one for $B$.
+2.  **Synchronization**: We must ensure that *all* threads have finished loading their data before any thread begins reading it. This is done using `__syncthreads()`.
+3.  **Compute**: Threads perform the matrix multiplication on the small tiles currently stored in Shared Memory.
+4.  **Synchronization**: We must wait for *all* threads to finish computing before we overwrite the Shared Memory with the next tiles.
+
+This process repeats until the block has swept through the entire width of $A$ (and height of $B$).
+
+### Mapping to Hardware
+
+Let's look at how this maps to our CUDA code in `tiled_mat_mul.cu`.
+
+**1. Grid and Block Dimensions**
+
+We define the tile size to match our block dimensions. A common choice is $32 \times 32$, allowing us to use 1024 threads per block.
+
+```cpp
+#define TILE_SIZE 32
+
+// Each block handles a 32x32 tile of C
+dim3 threadsPerBlock(TILE_SIZE, TILE_SIZE);
+
+// The grid covers the full NxM matrix
+dim3 blocksPerGrid((N + TILE_SIZE - 1) / TILE_SIZE,
+                   (M + TILE_SIZE - 1) / TILE_SIZE);
+```
+
+**2. The Logic: Computing Interleaves with Loading**
+
+Inside the kernel, each thread identifies its local position (`tx`, `ty`) within the tile and its global position (`row`, `col`) in the matrix.
+
+```cpp
+// Iterate over tiles with index t
+for (int t = 0; t < (N + TILE_SIZE - 1) / TILE_SIZE; ++t) {
+
+    // 1. LOAD: Each thread loads one element from A and B into Shared Memory
+    // Note: We check boundaries to handle matrices that aren't multiples of TILE_SIZE
+    if (row < M && (t * TILE_SIZE + tx) < N)
+         As[ty][tx] = A[row * N + t * TILE_SIZE + tx];
+    else
+         As[ty][tx] = 0.0f;
+
+    if ((t * TILE_SIZE + ty) < N && col < N)
+         Bs[ty][tx] = B[(t * TILE_SIZE + ty) * N + col];
+    else
+         Bs[ty][tx] = 0.0f;
+
+    // 2. SYNC: Ensure shared memory is populated
+    __syncthreads();
+
+    // 3. COMPUTE: Multiply the two tiles together
+    for (int k = 0; k < TILE_SIZE; ++k) {
+        acc += As[ty][k] * Bs[k][tx];
+    }
+
+    // 4. SYNC: Ensure we are done with these tiles before next iteration loads new ones
+    __syncthreads();
+}
+```
+
+By using tiling, we drastically reduce the bandwidth pressure on Global Memory. Instead of reading data from Global Memory $N$ times (once for every operation), we read it once into Shared Memory and reuse it `TILE_SIZE` times. This is the key to achieving high performance on GPUs!
