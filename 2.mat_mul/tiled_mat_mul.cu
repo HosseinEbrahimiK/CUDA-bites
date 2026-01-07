@@ -5,6 +5,13 @@
 
 #define TILE_SIZE 32
 
+void checkCudaError(cudaError_t err, const char *msg) {
+  if (err != cudaSuccess) {
+    fprintf(stderr, "Error %s: %s\n", msg, cudaGetErrorString(err));
+    exit(EXIT_FAILURE);
+  }
+}
+
 // CUDA kernel for tiled matrix multiplication
 // C = A * B
 // A is M x N
@@ -69,13 +76,6 @@ __global__ void tiledMatMul(const float *A, const float *B, float *C, int M,
   // Write result
   if (row < M && col < N) {
     C[row * N + col] = acc;
-  }
-}
-
-void checkCudaError(cudaError_t err, const char *msg) {
-  if (err != cudaSuccess) {
-    fprintf(stderr, "Error %s: %s\n", msg, cudaGetErrorString(err));
-    exit(EXIT_FAILURE);
   }
 }
 

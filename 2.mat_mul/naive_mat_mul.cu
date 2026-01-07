@@ -3,7 +3,14 @@
 #include <cuda_runtime.h>
 #include <math.h>
 
-// CUDA kernel for naive matrix multiplication
+void checkCudaError(cudaError_t err, const char *msg) {
+  if (err != cudaSuccess) {
+    fprintf(stderr, "Error %s: %s\n", msg, cudaGetErrorString(err));
+    exit(EXIT_FAILURE);
+  }
+}
+
+// Naive matrix multiplication
 __global__ void matMul(const float *A, const float *B, float *C, int M, int N) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = blockIdx.y * blockDim.y + threadIdx.y;
@@ -14,13 +21,6 @@ __global__ void matMul(const float *A, const float *B, float *C, int M, int N) {
       sum += A[i * N + k] * B[k * N + j];
     }
     C[i * N + j] = sum;
-  }
-}
-
-void checkCudaError(cudaError_t err, const char *msg) {
-  if (err != cudaSuccess) {
-    fprintf(stderr, "Error %s: %s\n", msg, cudaGetErrorString(err));
-    exit(EXIT_FAILURE);
   }
 }
 
